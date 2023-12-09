@@ -1,0 +1,194 @@
+---
+title: "YOUR PROJECT TITLE"
+subtitle: "602 (Fall 2023)"
+author: Name 1, Name 2, and Name 3
+format: 
+  html:
+    toc: true
+    toc-depth: 2
+    toc-title: Contents
+    toc-location: left
+    html-math-method: katex
+    theme: flatly
+    smooth-scroll: true
+    link-external-icon: true
+    link-external-newwindow: true
+    citations-hover: true
+    footnotes-hover: true
+    font-size: 80%
+---
+
+<!--
+ATTENTION: PLEASE SUBMIT both your qmd file and html file.
+-->
+
+
+<!--
+Replace the placeholders (title and author) with yours in the yaml above.
+-->
+
+
+# Project Description
+<!--
+State your research question and hypothesis along with the description of your experiment in one paragraph.
+-->
+
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+# library(ggpubr)
+# library(naniar)
+# library(ltm)
+library(haven)
+library(tidyverse)
+# library(readxl)
+library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+library(stringr)
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
+```{r}
+survey_data <- read_csv("/Users/kaiholl/downloads/survey_data_v2.csv") # example data
+
+head(exampledata)
+
+# subseting demographic questions for all groups
+demos <- exampledata %>%
+  filter(Status != "Survey Preview") %>%
+  select(rid, age, gender, hhi, ethnicity, hispanic,
+         education, political_party, region, zip) 
+# codebook is available in Canvas
+dim(demos)
+
+
+# Group 1 as an example
+g1 <- exampledata %>%
+  filter(Status != "Survey Preview") %>% # remove previews
+  select(starts_with(c("g1q","g1R", "g1_")), rid) %>%
+  full_join(demos) %>% # we want to keep all variables
+  filter(!row_number() %in% c(1, 2)) # drop the first two rows
+
+head(g1)
+
+
+
+# IV
+# focus on g1_DO (Display Order: g#_DO) to find 
+# which treatment R received.
+# Group 1's treatments are placed in the last part of the string, 
+# g1q3, g1q4, g1q5, g1q6
+# what we'd like to do is to create a new variable 
+# that has four levels
+# for the four treatments
+# to use the str_detect() function, let's use stringr() package
+
+library(stringr)
+
+g1 %>% 
+  mutate(g1_IV = case_when(
+    str_detect(g1_DO, "g1q3") ~ 1,
+    str_detect(g1_DO, "g1q4") ~ 2,
+    str_detect(g1_DO, "g1q5") ~ 3,
+    str_detect(g1_DO, "g1q6") ~ 4
+  )) %>%
+  select(g1_DO, g1_IV) # to check; and it works! 
+
+g1 <- g1 %>% 
+  mutate(g1_IV = case_when(
+    str_detect(g1_DO, "g1q3") ~ 1,
+    str_detect(g1_DO, "g1q4") ~ 2,
+    str_detect(g1_DO, "g1q5") ~ 3,
+    str_detect(g1_DO, "g1q6") ~ 4
+  )) 
+
+glimpse(g1)
+
+```
+
+
+
+
+# Descriptive Summary
+<!--
+One descriptive table and/or plot: Provide an overview of all the variables used in the statistical test. For example, the mean, standard deviation, range (min/max), contingency table, etc.
+-->
+
+```{r}
+# example
+library(psych) # Use any package you'd like to use!
+names(iris) # names(DATAFRAME)
+describe(iris) # describe(DATAFRAME)
+```
+
+
+
+# Findings
+<!--
+Findings: Report the statistic you obtained along with the information to decide whether the null hypothesis can be rejected or not. Use a plot and/or table with a proper label.
+-->
+
+```{r}
+# the built-in R data set named ToothGrowth:
+# data from a study evaluating the effect of Vitamin C on tooth growth in Guinea pigs.
+# The experiment has been performed on 60 pigs, where each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC). Tooth length was measured and a sample of the data is shown below
+my_data = ToothGrowth
+str(my_data)
+
+# Convert dose as a factor and recode the levels
+# as D0.5, D1, D2
+my_data$dose <- factor(my_data$dose,
+                       levels = c(0.5, 1, 2),
+                       labels = c("D0.5", "D1", "D2"))
+head(my_data)
+
+# frequency table:
+table(my_data$supp, my_data$dose)
+```
+
+
+```{r}
+example.aov <- aov(len ~ supp + dose, data = my_data)
+summary(example.aov)
+
+# or
+example.aov2 <- aov(len ~ supp * dose, data = my_data)
+summary(example.aov2)
+```
+
+```{r}
+# Line plots with multiple groups
+# plot tooth length ("len") by groups ("dose")
+# color box plot by a second group: "supp"
+# add error bars: mean_se
+library(ggpubr)
+ggline(my_data, x = "dose", y = "len", color = "supp",
+       add = c("mean_se", "dotplot"),
+       palette = c("#00AFBB", "#E7B800"))
+
+# OR
+# using R base graphs:
+boxplot(len ~ supp * dose, data = my_data, frame = FALSE,
+        col = c("#00AFBB", "#E7B800"), ylab = "Tooth Length")
+
+# Another example: Two-way interaction plot
+interaction.plot(x.factor = my_data$dose, trace.factor = my_data$supp, 
+                 # x.factor: the factor to be plotted on x axis
+                 # trace.factor: the factor to be plotted as lines
+                 # response: a numeric variable giving the response
+                 response = my_data$len, fun = mean,
+                 # type: the type of plot (p: point, l: line, b: both point and line)
+                 type = "b", legend = TRUE,
+                 xlab = "Dose", ylab = "Tooth Length",
+                 pch = c(1, 19), col = c("#00AFBB", "#E7B800"))
+```
+
+
+# Interpretation
+<!--
+Interpretation: Add a short paragraph that interprets the ANOVA test results.
+-->

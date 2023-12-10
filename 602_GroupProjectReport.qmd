@@ -53,60 +53,110 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 
 ```{r}
-survey_data <- read_csv("/Users/kaiholl/downloads/survey_data_v2.csv") # example data
+survey.data <- read_csv("/Users/kaiholl/Documents/GitHub/dacss602final/survey_data_v2.csv")
 
-head(exampledata)
+# renaming columns to make referencing them easier
+# --------------------------------
+oldnames = c("(att)g4q1_1_honest living","(att)g4q1_2_next door","(att)g4q1_3_rehabilitate","(att)g4q1_4_productivelives","(att)g4q1_5_immoral","(att)g4q1_6_circumstance","(att)g4q1_7_trust","(att)g4q1_8_guard","(att)g4q1_9_parole","(control)g4q2_felonsvote","g4q3_white_lowc_noitd","g4q4_nowhite_lowc_noitd","g4q5_white_medc_noitd","g4q6_nowhite_medc_noitd","g4q7_white_highc_noitd","g4q8_nowhite_highc_noitd","g4q9_white_lowc_itd","g4q10_nowhite_lowc_itd","g4q11_white_medc_itd","g4q12_nowhite_medc_itd","g4q13_white_highc_itd","g4q14_nowhite_highc_itd")
 
-# subseting demographic questions for all groups
-demos <- exampledata %>%
-  filter(Status != "Survey Preview") %>%
-  select(rid, age, gender, hhi, ethnicity, hispanic,
-         education, political_party, region, zip) 
-# codebook is available in Canvas
-dim(demos)
+newnames = c("honest.living","next.door","rehab","productive","immoral","circumstance","trust","guard","parole","vote.info", "white.low.nor","non.low.nor","white.med.nor","non.med.nor","white.high.nor","non.high.nor","white.low.r","non.low.r","white.med.r","non.med.r","white.high.r","non.high.r")
+
+# Info on Column Names
+# --------------------------------
+# ATTITUDES SCALE - full Questions
+# honest.living = Most felons are too lazy to earn an honest living. **(REVERSE SCORED)**
+# next.door = I wouldn’t mind living next door to an ex-felon.
+# rehab = Trying to rehabilitate felons is a waste of time and money. **(REVERSE SCORED)**
+# productive = Given the right conditions, felons can lead productive lives and become law-abiding citizens.
+# immoral = Felons are just plain immoral. **(REVERSE SCORED)**
+# circumstance = Felons are victims of circumstance and deserve to be helped.
+# trust = It is wise to trust a felon.
+# guard = You have to be constantly on your guard with felons. **(REVERSE SCORED)**
+# parole = If a person does well in prison, he/she should be let out on parole.
+
+# VIGNETTES
+# white = white felon
+# non = non-white felon
+# low = low crime severity, tax fraud
+# med = medium crime severity, armed robbery
+# high = high crime severity, sexual offense against a child
+# nor = no intention to recidivate, ie. do not intend to recommit crimes once out of prison
+# r = intention to recidiviate, ie. do intend to recommit crimes once out of prison
 
 
-# Group 1 as an example
-g1 <- exampledata %>%
-  filter(Status != "Survey Preview") %>% # remove previews
-  select(starts_with(c("g1q","g1R", "g1_")), rid) %>%
-  full_join(demos) %>% # we want to keep all variables
-  filter(!row_number() %in% c(1, 2)) # drop the first two rows
+# Recoding Attitude Responses to Numeric Factors
+# --------------------------------
+survey.data <- survey.data %>%
+  select(-c(DistributionChannel, Consent)) %>% # removing some unnecessary columns
+  rename_at(vars(oldnames), ~ newnames) %>%  
+  mutate(across(c("next.door","productive","circumstance","trust","parole","vote.info"), # normal worded positive scale items plus vote.info variable
+            ~case_when(
+              grepl("Strongly disagree", .) ~ "1",
+              grepl("Disagree", .) ~ "2",
+              grepl("Agree", .) ~ "3",
+              grepl("Strongly agree", .) ~ "4"))) %>%
+    mutate(across(c("honest.living","rehab","immoral","guard"), # recoding reverse worded survey items
+            ~case_when(
+              grepl("Strongly disagree", .) ~ "4",
+              grepl("Disagree", .) ~ "3",
+              grepl("Agree", .) ~ "2",
+              grepl("Strongly agree", .) ~ "1")))
 
-head(g1)
 
 
 
-# IV
-# focus on g1_DO (Display Order: g#_DO) to find 
-# which treatment R received.
-# Group 1's treatments are placed in the last part of the string, 
-# g1q3, g1q4, g1q5, g1q6
-# what we'd like to do is to create a new variable 
-# that has four levels
-# for the four treatments
-# to use the str_detect() function, let's use stringr() package
 
-library(stringr)
 
-g1 %>% 
-  mutate(g1_IV = case_when(
-    str_detect(g1_DO, "g1q3") ~ 1,
-    str_detect(g1_DO, "g1q4") ~ 2,
-    str_detect(g1_DO, "g1q5") ~ 3,
-    str_detect(g1_DO, "g1q6") ~ 4
-  )) %>%
-  select(g1_DO, g1_IV) # to check; and it works! 
 
-g1 <- g1 %>% 
-  mutate(g1_IV = case_when(
-    str_detect(g1_DO, "g1q3") ~ 1,
-    str_detect(g1_DO, "g1q4") ~ 2,
-    str_detect(g1_DO, "g1q5") ~ 3,
-    str_detect(g1_DO, "g1q6") ~ 4
-  )) 
 
-glimpse(g1)
+# # subseting demographic questions for all groups
+# demos <- exampledata %>%
+#   filter(Status != "Survey Preview") %>%
+#   select(rid, age, gender, hhi, ethnicity, hispanic,
+#          education, political_party, region, zip) 
+# # codebook is available in Canvas
+# dim(demos)
+# 
+# 
+# # Group 1 as an example
+# g1 <- exampledata %>%
+#   filter(Status != "Survey Preview") %>% # remove previews
+#   select(starts_with(c("g1q","g1R", "g1_")), rid) %>%
+#   full_join(demos) %>% # we want to keep all variables
+#   filter(!row_number() %in% c(1, 2)) # drop the first two rows
+# 
+# head(g1)
+# 
+# # IV
+# # focus on g1_DO (Display Order: g#_DO) to find 
+# # which treatment R received.
+# # Group 1's treatments are placed in the last part of the string, 
+# # g1q3, g1q4, g1q5, g1q6
+# # what we'd like to do is to create a new variable 
+# # that has four levels
+# # for the four treatments
+# # to use the str_detect() function, let's use stringr() package
+# 
+# library(stringr)
+# 
+# g1 %>% 
+#   mutate(g1_IV = case_when(
+#     str_detect(g1_DO, "g1q3") ~ 1,
+#     str_detect(g1_DO, "g1q4") ~ 2,
+#     str_detect(g1_DO, "g1q5") ~ 3,
+#     str_detect(g1_DO, "g1q6") ~ 4
+#   )) %>%
+#   select(g1_DO, g1_IV) # to check; and it works! 
+# 
+# g1 <- g1 %>% 
+#   mutate(g1_IV = case_when(
+#     str_detect(g1_DO, "g1q3") ~ 1,
+#     str_detect(g1_DO, "g1q4") ~ 2,
+#     str_detect(g1_DO, "g1q5") ~ 3,
+#     str_detect(g1_DO, "g1q6") ~ 4
+#   )) 
+# 
+# glimpse(g1)
 
 ```
 

@@ -105,7 +105,7 @@ survey.data <- survey.data %>%
 # Tabulating a Total Attitudes Score for Each Respondent
 # --------------------------------
 survey.data <- survey.data %>%
-  mutate(attitudes = rowSums(.[3:11]), .after = "parole")
+  mutate(attitudes = rowSums(.[3:11]) - 9, .after = "parole")
 
 # Creating Summary df
 # --------------------------------
@@ -127,7 +127,6 @@ respondent.df <- survey.data %>%
   mutate(v.response = coalesce(white.low.nor,non.low.nor,white.med.nor,non.med.nor,white.high.nor,non.high.nor, # v.response = survey participant's response to vignette
                                white.low.r,non.low.r,white.med.r,non.med.r,white.high.r,non.high.r), .after = "recidivism") %>% 
   select(-14:-25, -v.condition)
-
 ```
 
 

@@ -137,11 +137,10 @@ respondent.df <- survey.data %>%
                                white.low.r,non.low.r,white.med.r,non.med.r,white.high.r,non.high.r), .after = "recidivism") %>% 
   dplyr::select(-14:-25, -v.condition)
 
-
 # Turning variables into factor variable
 # --------------------------------
 respondent.df$crime.sev <- factor(respondent.df$crime.sev, levels = c("low", "medium", "high"))
-respondent.df$v.response <- factor(respondent.df$v.response, levels = c("no", "yes"))
+respondent.df$v.response <- factor(respondent.df$v.response, levels = c("No", "Yes"))
 
 
 # Creating new column for respondent history of incarceration
@@ -162,14 +161,37 @@ One descriptive table and/or plot: Provide an overview of all the variables used
 -->
 
 ```{r}
+# race
+# crime severity
+# vignette response (DV)
+
+table(respondent.df$felon.race, respondent.df$v.response)
+# non-white: no = 86, yes = 48
+# white: no = 86, yes = 43
+
+table(respondent.df$crime.sev, respondent.df$v.response)
+# No:
+# low = 58
+# medium = 53
+# high = 61
+
+# Yes:
+# low = 31
+# medium = 35
+# high = 25
+
+table(respondent.df$recidivism, respondent.df$v.response)
+#
+
+summary(respondent.df$attitudes)
+# most positive attitudes towards felons: 27
+# most negative attitudes towards felons: 0
 
 # table() makes a contingency table
 
-
-# # example
-# library(psych) # Use any package you'd like to use!
-# names(iris) # names(DATAFRAME)
-# describe(iris) # describe(DATAFRAME)
+table(respondent.df$v.response)
+# no = 172
+# yes = 91
 ```
 
 
@@ -274,10 +296,6 @@ respondent.df %>%
 
 # Relationship between Race of Felon and Vignette Response 
 # --------------------------------
-# table(respondent.df$felon.race, respondent.df$v.response)
-# non-white: no = 86, yes = 48
-# white: no = 86, yes = 43
-
 respondent.df %>%
   ggplot(aes(felon.race, fill = factor(v.response, 
                                      levels = c("0", "1"),
@@ -291,17 +309,6 @@ respondent.df %>%
 
 # Relationship between Crime Severity and Vignette Respone 
 # --------------------------------
-# table(respondent.df$crime.sev, respondent.df$v.response)
-# No:
-# low = 58
-# medium = 53
-# high = 61
-
-# Yes:
-# low = 31
-# medium = 35
-# high = 25
-
 respondent.df %>%
   ggplot(aes(v.response, fill = crime.sev)) +
   geom_bar(position = position_dodge(preserve = "single"), width = 0.7) +
@@ -332,3 +339,4 @@ respondent.df %>%
 <!--
 Interpretation: Add a short paragraph that interprets the ANOVA test results.
 -->
+

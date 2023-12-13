@@ -1,7 +1,7 @@
 ---
 title: "YOUR PROJECT TITLE"
 subtitle: "602 (Fall 2023)"
-author: Name 1, Name 2, and Name 3
+author: Kenneth Bufford, Kai Holl, Esiquio Iglesias Guerra
 format: 
   html:
     toc: true
@@ -166,33 +166,11 @@ Findings: Report the statistic you obtained along with the information to decide
 ```{r}
 # What variables do we want to compare to each other to see if there is a relationship?
 
-# Attitudes vs. Vignette Response: 
-# How does a respondent’s attitudes towards felons correlate with their response to their vignette?
-# Does the type of vignette (race, crime severity, recidivism intention) impact the strength of this relationship? For instance, are respondents with more negative attitudes more likely to not restore voting rights when they receive a vignette of a felon who intends to recidivate?
-
+# Attitudes vs. Vignette Response
 # Attitudes vs. Information Influence
-# Since both of these variables presumably measure a respondent’s attitudes towards felons, we should expect a respondent’s answers to both to be relatively similar
-# Does the knowledge of current voting rights laws across America and the fact that recidivism rates are high in America result in a respondent changing their attitudes (ie compare score from first attitudes scale to response to information influence item)
-
-# Race of felon vs. Vignette Response
-# Does the fact that the felon is White or Black impact the likelihood of a respondent believing that voting rights should be restored to the felon?
-# Does the crime severity or recidivism intention moderate this relationship?
-
-# Crime Severity vs. Vignette Response
-# Same as C
-
-# Recidivism Intention vs. Vignette Response
-# Same as C
-
-# --------------------------------
-# Determine whether variables are normally distributed and have homogeneity of variance
-# --------------------------------
-# IV. Which statistical tests should we use to compare these variables to each other?
-
-
-
-
-
+# Race of felon vs. Vignette Response = chi-squared test
+# Crime Severity vs. Vignette Response = chi-squared test
+# Recidivism Intention vs. Vignette Response = chi-squared test
 
 
 # Attitudes vs. Vignette Response
@@ -208,32 +186,50 @@ respondent.df <- respondent.df %>%
               v.response == "No" ~ "0",
               v.response == "Yes" ~ "1"))
 
-cor.test(respondent.df$v.response, respondent.df$attitudes, method = c("spearman"))
+# cor.test(respondent.df$v.response, respondent.df$attitudes, method = c("spearman"))
 
 
 # Attitudes vs. Information Influence
 # --------------------------------
 # attitudes and information influence are both qualitative ordinal variables, so Kendall's T is used.
 
-
-# WHAT ARE TIES???
-
-
 cor.test(respondent.df$attitudes, respondent.df$vote.info, method = c("kendall"))
+# p-value = 0.000000000001193
 # p-value < 0.05
 # tau = 0.3455909, moderate positive agreement
+# z = 7.1062
 
 
 # Race of felon vs. Vignette Response
 # --------------------------------
 
+chisq.test(respondent.df$felon.race, respondent.df$v.response)
+# p-value = 0.7685
+# so, fail to reject the null hypothesis (p > 0.05)
+# x-squared = 0.086612 
+# df = 1
+
+
 # Crime Severity vs. Vignette Response
 # --------------------------------
-cri.v <- aov(v.response ~ crime.sev, respondent.df)
-summary(cri.v)
+chisq.test(respondent.df$crime.sev, respondent.df$v.response)
+# p-value = 0.332
+# so, fail to reject the null hypothesis (p > 0.05)
+# x-squared = 2.205
+# df = 2
+
 
 # Recidivism Intention vs. Vignette Response
 # --------------------------------
+chisq.test(respondent.df$recidivism, respondent.df$v.response)
+# p-value = 0.01084
+# so, reject the null hypothesis (p < 0.05), yay!
+# x-squared = 6.4907
+# df = 1
+
+
+
+
 
 
 # https://statsandr.com/blog/pearson-spearman-kendall-correlation-by-hand/

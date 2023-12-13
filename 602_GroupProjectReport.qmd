@@ -30,7 +30,9 @@ Replace the placeholders (title and author) with yours in the yaml above.
 
 # Project Description
 <!--
-State your research question and hypothesis along with the description of your experiment in one paragraph.
+With the growing research into the punitive nature of the 13th Amendment, sociologists have begun to question the ways in which we mistreat felons and those incarcerated. One significant inquiry is who will advocate for those currently serving time. In 26 states, it is legal to disenfranchise felons, preventing them from ever voting again in specific municipalities. To understand how felon enfranchisement would impact our general population, we first examine the factors leading to continuous felon disenfranchisement.
+
+In our survey, we investigate how the severity of the crime and the intention for recidivism affect people’s perceptions of whether voting rights should be restored to a felon in prison. We hypothesize that the more severe the crime, the less likely someone is to have their enfranchisement rights restored while serving time and that if someone intends to recidvise they will be less likely to have their enfranchisement restored in prison. Additionally, we explore how a respondent’s general attitudes towards felons moderate this relationship. If people generally hold negative perceptions of felons, we inquire about the impact of providing information about felons and their recidivism rates on the chances of enfranchisement.
 -->
 
 
@@ -337,6 +339,22 @@ respondent.df %>%
 
 # Interpretation
 <!--
-Interpretation: Add a short paragraph that interprets the ANOVA test results.
+
+Discussion of Chi-Square Test:
+We conducted Chi-Square tests on four distinct groups: Race of Felon vs. Vignette Response, Crime Severity vs. Vignette Response, Recidivism Intention vs. Vignette Response, and Incarceration History vs. Vignette Response. Among these, Race of Felon, Crime Severity, and Incarceration History yielded non-significant p-values. This indicates that we cannot reject the null hypothesis, suggesting no significant mean variance between the groups in these cases.
+On the contrary, Recidivism Intention and Response displayed a P-Value of 0.01084, allowing us to reject the null hypothesis. This implies a discernible difference between the groups. Specifically, the intention of recidivism appears to influence the likelihood of voting in favor of enfranchisement. The significance of this finding underscores the impact that respondents' perceptions of an individual's likelihood to reoffend have on their stance toward enfranchisement.
+
+
+Visualizations and Communication:
+Examining bar graphs where results are segmented by variables and color-coded for interpretation reveals intriguing insights. The initial graph illustrates the connection between attitudes and vignette responses. Higher attitudes correlate with felons being more inclined to vote for enfranchisement. Divergent outcomes emerge across varying levels of crime severity. Notably, perceived non-violent crimes show little distinction from high-severity crimes. Conversely, crimes like robbery are perceived as more conducive to enfranchisement. Another finding indicates that race does not influence who is enfranchised. Non-white individuals are only marginally more likely to be re-enfranchised, with no significant difference. Turning our attention to recidivism intention, it plays a role in determining someone's likelihood of being re-enfranchised. Just over half of survey respondents, when informed about a defendant likely to recommit the crime post-release, voted against enfranchising felons. This suggests that when negative information about felons is presented before voting, there's an almost 50-50 chance of a 'no' vote. Conversely, the intention not to recommit the crime resulted in 62% of respondents voting to enfranchise felons. When individuals have a genuine support system and are committed to rehabilitation, there's a higher likelihood of voting for enfranchisement, even while the individual is still in prison.
+
+Social and Economic Considerations:
+While we controlled for race and income, we believe another factor may explain the perception of armed robbery. Traditionally, crimes like robbery don't occur in a vacuum; they often stem from socioeconomic factors, where individuals, having limited options, resort to crime, unlike offenses such as tax evasion and pedophilia.
+
+Suggestions for Future Research:
+In future research, we aim to delve into specific points to gain a deeper understanding. First, we want to explore why armed robbery, considered a middle-severity crime, was perceived more favorably than tax evasion. Were our categorizations of non-violent crimes accurate, or do certain non-violent crime saliences predispose people to vote in a certain way? Now that we know race plays no significant role, further investigation into the three main groups of low, middle, and high severity crimes and how perception influences them is warranted.
+
+Limitations of the Study:
+Our study surveyed only 263 people, a sample size insufficient for extrapolating inferences about the broader U.S. community. Furthermore, with 12 different groups, each consisting of fewer than 30 people, the sample distribution poses limitations. Additionally, the perception of crime severity may vary; what we consider less severe might be perceived differently by others online.
 -->
 

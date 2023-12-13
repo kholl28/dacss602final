@@ -1,5 +1,5 @@
 ---
-title: "YOUR PROJECT TITLE"
+title: "The Impact of Crime Severity and Recidivism on Attitudes towards Felon Voting Rights"
 subtitle: "602 (Fall 2023)"
 author: Kenneth Bufford, Kai Holl, Esiquio Iglesias Guerra
 format: 
@@ -45,15 +45,20 @@ library(tidyr)
 library(haven)
 library(tidyverse)
 library(explore)
-library(haven) #for loading other datafiles (SAS, STATA, SPSS, etc.)
+library(haven)
 library(stringr)
 library(ggpubr)
+library(ltm)
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
 
 ```{r warning = FALSE, message = FALSE}
+
+# Ese, your data cleaning code should go here!
+
+
 survey.data <- read_csv("/Users/kaiholl/Documents/GitHub/dacss602final/survey_data_v2.csv")
 
 # renaming columns to make referencing them easier
@@ -88,7 +93,7 @@ newnames = c("respondent","honest.living","next.door","rehab","productive","immo
 # Recoding Attitude Responses to Numeric
 # --------------------------------
 survey.data <- survey.data %>%
-  select(-c(DistributionChannel, Consent)) %>% # removing some unnecessary columns
+  dplyr::select(-c(DistributionChannel, Consent)) %>% # removing some unnecessary columns
   rename_at(vars(oldnames), ~ newnames) %>%  
   mutate(across(c("next.door","productive","circumstance","trust","parole","vote.info"), # normal worded positive scale items plus vote.info variable
             ~case_when(
@@ -114,7 +119,7 @@ survey.data <- survey.data %>%
 # Creating Summary df
 # --------------------------------
 vignettes <- survey.data %>%
-  select(14:25) 
+  dplyr::select(14:25) 
 
 respondent.df <- survey.data %>%
   mutate(v.condition = names(vignettes)[max.col(!is.na(vignettes))], .after = "non.high.r") %>% 
@@ -130,10 +135,25 @@ respondent.df <- survey.data %>%
     str_detect(v.condition, "r") ~ "intent"), .after = "crime.sev") %>% 
   mutate(v.response = coalesce(white.low.nor,non.low.nor,white.med.nor,non.med.nor,white.high.nor,non.high.nor, # v.response = survey participant's response to vignette
                                white.low.r,non.low.r,white.med.r,non.med.r,white.high.r,non.high.r), .after = "recidivism") %>% 
-  select(-14:-25, -v.condition)
+  dplyr::select(-14:-25, -v.condition)
+
+
+# Turning variables into factor variable
+# --------------------------------
+respondent.df$crime.sev <- factor(respondent.df$crime.sev, levels = c("low", "medium", "high"))
+respondent.df$v.response <- factor(respondent.df$v.response, levels = c("no", "yes"))
+
+
+# Creating new column for respondent history of incarceration
+# --------------------------------
+# you.jail = "Have you ever been incarcerated (sentenced to prison)" Yes/No
+# famfrd.jail = "Has a friend or family members of yours ever been incarcerated (sentenced to prison)?" Yes/No
+
+respondent.df <- respondent.df %>% 
+  mutate(jail = case_when(
+    you.jail == "Yes" | famfrd.jail == "Yes" ~ "Yes",
+    you.jail == "No" | famfrd.jail == "No" ~ "No"), .after = "famfrd.jail")
 ```
-
-
 
 
 # Descriptive Summary
@@ -142,18 +162,14 @@ One descriptive table and/or plot: Provide an overview of all the variables used
 -->
 
 ```{r}
-# turning variables into factor variable
-# --------------------------------
-respondent.df$crime.sev <- factor(respondent.df$crime.sev, levels = c("low", "medium", "high"))
-respondent.df$v.response <- as.factor(respondent.df$v.response)
+
+# table() makes a contingency table
 
 
-
-
-# example
-library(psych) # Use any package you'd like to use!
-names(iris) # names(DATAFRAME)
-describe(iris) # describe(DATAFRAME)
+# # example
+# library(psych) # Use any package you'd like to use!
+# names(iris) # names(DATAFRAME)
+# describe(iris) # describe(DATAFRAME)
 ```
 
 
@@ -166,8 +182,7 @@ Findings: Report the statistic you obtained along with the information to decide
 ```{r}
 # What variables do we want to compare to each other to see if there is a relationship?
 
-# Attitudes vs. Vignette Response
-# Attitudes vs. Information Influence
+# Attitudes vs. Vignette Response = point-biserial correlation test
 # Race of felon vs. Vignette Response = chi-squared test
 # Crime Severity vs. Vignette Response = chi-squared test
 # Recidivism Intention vs. Vignette Response = chi-squared test
@@ -175,34 +190,24 @@ Findings: Report the statistic you obtained along with the information to decide
 
 # Attitudes vs. Vignette Response
 # --------------------------------
-# respondent.df %>% 
-# cor.test(attitudes, )
-
-# att.v <- lm(attitudes ~ v.response, respondent.df)
-# summary(att.v)
-
-respondent.df <- respondent.df %>% 
+respondent.df <- respondent.df %>%
   mutate(v.response = case_when(
               v.response == "No" ~ "0",
               v.response == "Yes" ~ "1"))
 
-# cor.test(respondent.df$v.response, respondent.df$attitudes, method = c("spearman"))
+biserial.cor(respondent.df$attitudes, respondent.df$v.response, use = c("all.obs"), level = 1)
+biserial.cor(respondent.df$attitudes, respondent.df$v.response, use = c("all.obs"), level = 2)
+# level 1 = no response to vignette
+# -0.2203021
+# level 2 = yes response to vignette
+# 0.2203021
+# normal relationship, not very strong
 
-
-# Attitudes vs. Information Influence
-# --------------------------------
-# attitudes and information influence are both qualitative ordinal variables, so Kendall's T is used.
-
-cor.test(respondent.df$attitudes, respondent.df$vote.info, method = c("kendall"))
-# p-value = 0.000000000001193
-# p-value < 0.05
-# tau = 0.3455909, moderate positive agreement
-# z = 7.1062
+# https://medium.com/@RaharditoDP/point-biserial-correlation-in-r-70e713caa7a0
 
 
 # Race of felon vs. Vignette Response
 # --------------------------------
-
 chisq.test(respondent.df$felon.race, respondent.df$v.response)
 # p-value = 0.7685
 # so, fail to reject the null hypothesis (p > 0.05)
@@ -228,36 +233,13 @@ chisq.test(respondent.df$recidivism, respondent.df$v.response)
 # df = 1
 
 
-
-
-
-
-# https://statsandr.com/blog/pearson-spearman-kendall-correlation-by-hand/
-# https://ademos.people.uic.edu/Chapter22.html#23_kendall_correlation
-
-# Pearson: used for two quantitative continuous variables which have a linear relationship
-
-# As stated above, Pearson only works with linear data. That means that your two correlated factors have to approximate a line, and not a curved or parabolic shape. It’s not that you can’t use pearson to see if there is a linear relationship in data, it’s just that there are other tests suited to analyzing those different data structures.
-# https://feliperego.github.io/blog/2015/10/23/Interpreting-Model-Output-In-R
-
-# Spearman, used for two quantitative variables if the link is partially linear, or for one qualitative ordinal variable and one quantitative variable. 
-
-# Kendall, often used for two qualitative ordinal variables.
-# Strong positive agreement between the ranks when tau > 0.45
-# Moderate positive agreement between the ranks when tau > 0.27
-# Weak positive agreement between the ranks when tau is > 0.09
-# Use negative values and less-than signs for negative correlations.
-
-```
-
-
-```{r}
-# example.aov <- aov(len ~ supp + dose, data = my_data)
-# summary(example.aov)
-# 
-# # or
-# example.aov2 <- aov(len ~ supp * dose, data = my_data)
-# summary(example.aov2)
+# Incarceration History vs. Vignette Response
+# --------------------------------
+chisq.test(respondent.df$jail, respondent.df$v.response)
+# p-value = 0.4388
+# so, fail to reject the null hypothesis (p > 0.05)
+# x-squared = 0.59935
+# df = 1
 ```
 
 ```{r}
@@ -265,16 +247,51 @@ chisq.test(respondent.df$recidivism, respondent.df$v.response)
 
 # https://rkabacoff.github.io/datavis/Bivariate.html
 
-# Relationship between Race of Felon and Vignette Respone 
+# Attitudes vs. Vignette Response
+# Race of felon vs. Vignette Response = chi-squared test
+# Crime Severity vs. Vignette Response = chi-squared test
+# Recidivism Intention vs. Vignette Response = chi-squared test
+
+
+# Relationship between Attitudes and Vignette Response
 # --------------------------------
-table(respondent.df$felon.race, respondent.df$v.response)
+respondent.df %>%
+  ggplot(aes(v.response, attitudes)) +
+  geom_boxplot(fill='lightskyblue') +
+  theme_minimal() +
+  labs(x = "Vignette Response", y="Total Attitudes Score", title = "Relationship between Attitudes and Vignette Response")
+
+respondent.df %>%
+  group_by(v.response) %>%
+  count(attitudes) %>%
+  ggplot(aes(attitudes, n, colour = v.response, group = v.response)) +
+  geom_line(lwd = 1) +
+  theme_minimal() +
+  theme(legend.position = 'bottom') +
+  scale_colour_hue(labels=c("Voting rights restored", "voting rights NOT restored")) +
+  labs(x = "Total Attitudes Score", y = "Count", colour = "Vignette Response", title = "Relationship btw/ attitudes towards felons and decision to restore felon voting rights")
+
+
+# Relationship between Race of Felon and Vignette Response 
+# --------------------------------
+# table(respondent.df$felon.race, respondent.df$v.response)
 # non-white: no = 86, yes = 48
 # white: no = 86, yes = 43
 
+respondent.df %>%
+  ggplot(aes(felon.race, fill = factor(v.response, 
+                                     levels = c("0", "1"),
+                                     labels = c("no", "yes")))) +
+  geom_bar(position = "fill", width = 0.7) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1", name = "Voting Rights Restored?", labels = c("No", "Yes")) +
+  scale_y_continuous(labels = scales::percent_format(accurary = 1)) +
+  labs(x = "Race of Felon", y="Proportion (%)", title = "Effect of Felon Race on Voting Rights Restoration")
+
+
 # Relationship between Crime Severity and Vignette Respone 
 # --------------------------------
-
-table(respondent.df$crime.sev, respondent.df$v.response)
+# table(respondent.df$crime.sev, respondent.df$v.response)
 # No:
 # low = 58
 # medium = 53
@@ -289,45 +306,12 @@ respondent.df %>%
   ggplot(aes(v.response, fill = crime.sev)) +
   geom_bar(position = position_dodge(preserve = "single"), width = 0.7) +
   scale_fill_manual(name = "Crime severity", values = c("lightgreen", "khaki", "indianred")) +
+  scale_x_discrete(name = "Voting Rights Restored?", labels = c("No", "Yes")) +
   theme_minimal() +
   labs(x = "Vignette Response", y="Count", title = "Effect of Crime Severity on Voting Rights Restoration")
 
 # The majority of respondents said No to restoring voting rights to the felon.
 # Respondents were marginally more likely to restore voting rights to a felon with a medium crime severity than a low or high crime severity **NEED TO CHECK SIGNIFICANCE**
-
-
-# Relationship between Attitudes and Vignette Response
-# --------------------------------
-# respondent.df %>%
-#   ggplot(aes(v.response, attitudes)) +  
-#   geom_boxplot(fill='lightskyblue') +
-#   theme_minimal() +
-#   labs(x = "Vignette Response", y="Total Attitudes Score", title = "Relationship between Attitudes and Vignette Response")
-
-respondent.df %>%
-  group_by(v.response) %>%
-  count(attitudes) %>%
-  ggplot(aes(attitudes, n, colour = v.response, group = v.response)) +
-  geom_line(lwd = 1) +
-  theme_minimal() +
-  theme(legend.position = 'bottom') +
-  scale_colour_hue(labels=c("Voting rights restored", "voting rights NOT restored")) +
-  labs(x = "Total Attitudes Score", y = "Count", colour = "Vignette Response", title = "Relationship btw/ attitudes towards felons and decision to restore felon voting rights")
-
-
-# Attitudes vs. Information Influence
-# --------------------------------
-# respondent.df$attitudes <- as.factor(respondent.df$attitudes)
-# respondent.df$vote.info <- as.factor(respondent.df$vote.info)
-
-respondent.df %>%
-  group_by(vote.info) %>%
-  count(attitudes) %>% 
-  ggplot(aes(attitudes, n, fill = vote.info)) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  scale_y_continuous(labels = scales::percent_format(accurary = 1)) +
-  labs(x = "Total attitudes score", y="Proportion (%)", title = "Relationship btw/ attitudes towards felons and voting rights restoration post information", fill = "Voting Rights Decision")
 
 
 # Relationship between Recidivism Intention and Vignette Response
@@ -336,55 +320,11 @@ respondent.df %>%
   ggplot(aes(v.response, fill=recidivism)) +
   geom_bar(position="fill", width = 0.7) +
   theme_minimal() +
+   scale_x_discrete(name = "Voting Rights Restored?", labels = c("No", "Yes")) +
   scale_y_continuous(labels = scales::percent_format(accurary = 1)) +
   labs(x = "Vignette Response", y="Proportion (%)", title = "Effect of Felon Recidivism Intention on Voting Rights Restoration", fill = "Recidivism Intention")
 
 # plot shows that when shown a vignette of a felon who intends to recommit the crime once released from prison, independent of the severity of the crime committed or the race of the felon, respondents are more likely to not restore rights to the felon compared to respondents who received vignettes of felons who did NOT intend to recidivise. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# plot tooth length ("len") by groups ("dose")
-# color box plot by a second group: "supp"
-# add error bars: mean_se
-# 
-# # Line plots with multiple groups
-# # plot tooth length ("len") by groups ("dose")
-# # color box plot by a second group: "supp"
-# # add error bars: mean_se
-# library(ggpubr)
-# ggline(my_data, x = "dose", y = "len", color = "supp",
-#        add = c("mean_se", "dotplot"),
-#        palette = c("#00AFBB", "#E7B800"))
-# 
-# # OR
-# # using R base graphs:
-# boxplot(len ~ supp * dose, data = my_data, frame = FALSE,
-#         col = c("#00AFBB", "#E7B800"), ylab = "Tooth Length")
-# 
-# # Another example: Two-way interaction plot
-# interaction.plot(x.factor = my_data$dose, trace.factor = my_data$supp,
-#                  # x.factor: the factor to be plotted on x axis
-#                  # trace.factor: the factor to be plotted as lines
-#                  # response: a numeric variable giving the response
-#                  response = my_data$len, fun = mean,
-#                  # type: the type of plot (p: point, l: line, b: both point and line)
-#                  type = "b", legend = TRUE,
-#                  xlab = "Dose", ylab = "Tooth Length",
-#                  pch = c(1, 19), col = c("#00AFBB", "#E7B800"))
-
 ```
 
 

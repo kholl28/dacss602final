@@ -70,13 +70,166 @@ library(ltm)
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
+# Importing Dataset and Cleaning
 
 ```{r warning = FALSE, message = FALSE}
+#survey_data <- read_csv('RD_Omnibus_FA23_final_dec7.csv')
+survey_data <- read_csv('https://raw.githubusercontent.com/eiig26/public_data/main/RD_Omnibus_FA23_final_dec7.csv')
 
-# Ese, your data cleaning code should go here!
+#Remove the headers
+survey_data <- survey_data [-(1:2),]
 
+#Select just our columns and Remove the preview responses
+survey_data <- survey_data[survey_data$Status != "Survey Preview", c(
+  "Duration (in seconds)",
+  "DistributionChannel",
+  "Consent",
+  "g4q1_1", "g4q1_2", "g4q1_3", "g4q1_4", "g4q1_5", "g4q1_6", "g4q1_7", "g4q1_8", "g4q1_9",
+  "g4q2", "g4q3", "g4q4", "g4q5", "g4q6", "g4q7", "g4q8", "g4q9", "g4q10", "g4q11", "g4q12", "g4q13", "g4q14",
+  "age", "gender", "hhi", "ethnicity", "hispanic", "education", "political_party", "zip", "region",
+  "g4_DO", "g4jail1", "g4jail2"
+)]
 
-survey.data <- read_csv("/Users/kaiholl/Documents/GitHub/dacss602final/survey_data_v2.csv")
+#Remove Consent = I do not agree
+survey_data <- survey_data %>% filter(Consent == "I agree")
+
+#Rename columns for best understanding
+survey_data <- survey_data %>% rename("(att)g4q1_1_honest living" = g4q1_1, "(att)g4q1_2_next door" = g4q1_2, "(att)g4q1_3_rehabilitate" = g4q1_3, "(att)g4q1_4_productivelives" = g4q1_4, "(att)g4q1_5_immoral" = g4q1_5, "(att)g4q1_6_circumstance" = g4q1_6, "(att)g4q1_7_trust" = g4q1_7, "(att)g4q1_8_guard" = g4q1_8, "(att)g4q1_9_parole" = g4q1_9, "(control)g4q2_felonsvote" = g4q2, "g4q3_white_lowc_noitd" = g4q3, "g4q4_nowhite_lowc_noitd" = g4q4, "g4q5_white_medc_noitd" = g4q5, "g4q6_nowhite_medc_noitd" = g4q6, "g4q7_white_highc_noitd" = g4q7, "g4q8_nowhite_highc_noitd" = g4q8, "g4q9_white_lowc_itd" = g4q9, "g4q10_nowhite_lowc_itd" = g4q10, "g4q11_white_medc_itd" = g4q11, "g4q12_nowhite_medc_itd" = g4q12, "g4q13_white_highc_itd" = g4q13, "g4q14_nowhite_highc_itd" = g4q14,  "g4jail1_youincar" = g4jail1, "g4jail2_famfrdincar" = g4jail2)
+
+#Recode gender column
+survey_data <- survey_data %>%
+  mutate(gender = recode(as.character(gender),"1" =	"Male", "2" =	"Female"))
+
+#Recode ethnicity column
+survey_data <- survey_data %>%
+  mutate(ethnicity = recode(as.character(ethnicity),
+"1" =	"White", 
+"2" =	"Black, or African American",
+"3" =	"American Indian or Alaska Native",
+"4" =	"Asian *** Asian Indian", 
+"5"	= "Asian *** Chinese", 
+"6" =	"Asian *** Filipino",
+"7"	= "Asian *** Japanese", 
+"8"	= "Asian *** Korean", 
+"9" =	"Asian *** Vietnamese", 
+"10" =	"Asian *** Other", 
+"11" =	"Pacific Islander *** Native Hawaiian ",
+"12" =	"Pacific Islander *** Guamanian", 
+"13" =	"Pacific Islander *** Samoan", 
+"14" =	"Pacific Islander *** Other Pacific Islander",
+"15" =	"Some other race", 
+"16" =	"Prefer not to answer")) 
+
+#Recode political party columns 
+survey_data <- survey_data %>%
+  mutate(political_party = recode(as.character(political_party),
+"1" =	"Strong Democrat",
+"2" =	"Not very strong Democrat",
+"3" =	"Independent Democrat",
+"4" = "Independent - neither",
+"5" =	"Independent Republican",
+"6" =	"Other - leaning Democrat",
+"7" =	"Other - neither",
+"8"	= "Other - leaning Republican",
+"9" =	"Not very strong Republican",
+"10" = "Strong Republican"))
+
+#Recode education columns
+survey_data <- survey_data %>%
+  mutate(education = recode(as.character(education),
+"1" =	"Some high school or less",
+"2" =	"High school graduate",
+"3" =	"Other post high school vocational training",
+"4" =	"Completed some college, but no degree",
+"5" =	"Associate's degree",
+"6" =	"Bachelor's degree",
+"7" =	"Master's or professional degree",
+"8" =	"Doctorate degree",
+"-3105"	= "None of the above"))
+
+#Recode hhi column (Annual household income)
+survey_data <- survey_data %>%
+  mutate(hhi = recode(as.character(hhi),
+"1" =	"Less than $14,999",
+"2" =	"$15,000 to $19,999",
+"3" =	"$20,000 to $24,999",
+"4" =	"$25,000 to $29,999",
+"5" =	"$30,000 to $34,999",
+"6" =	"$35,000 to $39,999",
+"7" =	"$40,000 to $44,999",
+"8" =	"$45,000 to $49,999",
+"9" =	"$50,000 to $54,999",
+"10" =	"$55,000 to $59,999",
+"11" =	"$60,000 to $64,999",
+"12" = "$65,000 to $69,999",
+"13" =	"$70,000 to $74,999",
+"14" =	"$75,000 to $79,999",
+"15" =	"$80,000 to $84,999",
+"16" =	"$85,000 to $89,999",
+"17" =	"$90,000 to $94,999",
+"18" =	"$95,000 to $99,999",
+"19" =	"$100,000 to $124,999",
+"20" =	"$125,000 to $149,999",
+"21" =	"$150,000 to $174,999",
+"22" =	"$175,000 to $199,999",
+"23" =	"$200,000 to $249,999",
+"24" =	"$250,000 and above",
+"-3105" =	"Prefer not to answer"))
+
+#Recode hispanic columns
+survey_data <- survey_data %>%
+  mutate(hispanic = recode(as.character(hispanic),
+"1" =	"No , not of Hispanic, Latino, or Spanish origin",
+"2" =	"Yes, Mexican, Mexican American, Chicano",
+"3" =	"Yes, Cuban",
+"4"	= "Yes, another Hispanic, Latino, or Spanish origin *** Argentina",
+"5" =	"Yes, another Hispanic, Latino, or Spanish origin *** Colombia",
+"6" =	"Yes, another Hispanic, Latino, or Spanish origin *** Ecuador",
+"7" =	"Yes, another Hispanic, Latino, or Spanish origin *** El Salvadore", 
+"8" =	"Yes, another Hispanic, Latino, or Spanish origin *** Guatemala", 
+"9" =	"Yes, another Hispanic, Latino, or Spanish origin *** Nicaragua", 
+"10" =	"Yes, another Hispanic, Latino, or Spanish origin *** Panama", 
+"11" =	"Yes, another Hispanic, Latino, or Spanish origin *** Peru", 
+"12" =	"Yes, another Hispanic, Latino, or Spanish origin *** Spain", 
+"13" =	"Yes, another Hispanic, Latino, or Spanish origin *** Venezuela", 
+"14" =	"Yes, another Hispanic, Latino, or Spanish origin *** Other Country",
+"15" =	"Prefer not to answer"))
+
+#Recode region columns
+survey_data <- survey_data %>%
+  mutate(region = recode(as.character(region),
+"1" =	"Northeast",
+"2" =	"Midwest",
+"3" =	"South",
+"4" =	"West"))
+
+#Assign IV number
+
+survey_data <- survey_data %>% 
+  mutate(g4_IV = case_when(
+   str_detect(g4_DO, "g4q3") ~ 1,
+    str_detect(g4_DO, "g4q4") ~ 2,
+    str_detect(g4_DO, "g4q5") ~ 3,
+    str_detect(g4_DO, "g4q6") ~ 4,
+     str_detect(g4_DO, "g4q7") ~ 5,
+     str_detect(g4_DO, "g4q8") ~ 6,
+     str_detect(g4_DO, "g4q9") ~ 7,
+     str_detect(g4_DO, "g4q10") ~ 8,
+     str_detect(g4_DO, "g4q11") ~ 9,
+     str_detect(g4_DO, "g4q12") ~ 10,
+     str_detect(g4_DO, "g4q13") ~ 11,
+     str_detect(g4_DO, "g4q14") ~ 12,
+    )) 
+
+write.csv(survey_data, "survey_data_v2.csv", row.names=TRUE)
+
+#The survey_data file was uploaded to GitHub for continue with the Data Cleaning process
+```
+
+# More Data Cleaning and Recoding
+
+```{r}
+survey.data <- read_csv("https://raw.githubusercontent.com/kholl28/dacss602final/main/survey_data_v2.csv?token=GHSAT0AAAAAACLHNEN2NCZ7WEDFG2CIKPZSZL2FBMQ")
 
 # renaming columns to make referencing them easier
 # --------------------------------
@@ -159,7 +312,6 @@ respondent.df <- survey.data %>%
 respondent.df$crime.sev <- factor(respondent.df$crime.sev, levels = c("low", "medium", "high"))
 respondent.df$v.response <- factor(respondent.df$v.response, levels = c("No", "Yes"))
 
-
 # Creating new column for respondent history of incarceration
 # --------------------------------
 # you.jail = "Have you ever been incarcerated (sentenced to prison)" Yes/No
@@ -171,7 +323,6 @@ respondent.df <- respondent.df %>%
     you.jail == "No" | famfrd.jail == "No" ~ "No"), .after = "famfrd.jail")
 ```
 
-
 # Descriptive Summary
 <!--
 One descriptive table and/or plot: Provide an overview of all the variables used in the statistical test. For example, the mean, standard deviation, range (min/max), contingency table, etc.
@@ -180,12 +331,17 @@ One descriptive table and/or plot: Provide an overview of all the variables used
 ```{r}
 # race
 # crime severity
+# recidivism intention
 # vignette response (DV)
 
+# Vignette Response + Race of Felon
+# --------------------------------
 table(respondent.df$felon.race, respondent.df$v.response)
 # non-white: no = 86, yes = 48
 # white: no = 86, yes = 43
 
+# Vignette Response + Crime Severity
+# --------------------------------
 table(respondent.df$crime.sev, respondent.df$v.response)
 # No:
 # low = 58
@@ -197,21 +353,39 @@ table(respondent.df$crime.sev, respondent.df$v.response)
 # medium = 35
 # high = 25
 
+# Vignette Response + Recidivism Intent
+# --------------------------------
 table(respondent.df$recidivism, respondent.df$v.response)
-#
+# intent:
+# no = 96
+# yes = 35
 
-summary(respondent.df$attitudes)
-# most positive attitudes towards felons: 27
-# most negative attitudes towards felons: 0
+# no intent:
+# no = 76
+# yes = 56
 
-# table() makes a contingency table
-
+# Overall Vignette Responses
+# --------------------------------
 table(respondent.df$v.response)
 # no = 172
 # yes = 91
+
+# Summary Table of Attitudes per each IV
+# --------------------------------
+summary_table <- respondent.df %>%
+  group_by(felon.race, crime.sev, recidivism) %>%
+  summarize(
+    Mean_Attitudes = mean(attitudes, na.rm = TRUE),
+    Response_Yes = sum(v.response == "1", na.rm = TRUE),
+    Response_No = sum(v.response == "0", na.rm = TRUE),
+    .groups = 'drop'  # This drops the grouping after summarization
+  )
+
+summary_table
+
+# most positive attitudes towards felons: 27
+# most negative attitudes towards felons: 0
 ```
-
-
 
 # Findings
 <!--
@@ -225,7 +399,6 @@ Findings: Report the statistic you obtained along with the information to decide
 # Race of felon vs. Vignette Response = chi-squared test
 # Crime Severity vs. Vignette Response = chi-squared test
 # Recidivism Intention vs. Vignette Response = chi-squared test
-
 
 # Attitudes vs. Vignette Response
 # --------------------------------

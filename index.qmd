@@ -34,7 +34,7 @@ With the growing research into the punitive nature of the 13th Amendment,
 sociologists have begun to question the ways in which we mistreat felons 
 and those incarcerated. One significant inquiry is who will advocate for 
 those currently serving time. In 26 states, it is legal to disenfranchise 
-felons, preventing them from ever voting again in specific municipalities. 
+felons while in jail, and prevent them from ever voting again in specific municipalities once freed. 
 To understand how felon enfranchisement would impact our general population, 
 we first examine the factors leading to continuous felon disenfranchisement.
 
@@ -43,11 +43,17 @@ for recidivism affect people’s perceptions of whether voting rights should be
 restored to a felon in prison. We hypothesize that the more severe the crime, 
 the less likely someone is to have their enfranchisement rights restored while 
 serving time and that if someone intends to recidvise they will be less likely 
-to have their enfranchisement restored in prison. Additionally, we explore how 
-a respondent’s general attitudes towards felons moderate this relationship. 
-If people generally hold negative perceptions of felons, we inquire about the 
-impact of providing information about felons and their recidivism rates on the 
-chances of enfranchisement.
+to have their enfranchisement restored in prison. We also hypothesis that felons 
+of color will dispropotionatly not be enfranchised while in prison due to bias 
+ideas of crime rate, recidivism and negative ideologies attributed to people 
+of color. We hypothesis that perceptions of felons also playing a major role in 
+indicated how likely someone is towards voting for enfranchisement legislation. 
+Those who know someone in prison, or have better ideas of felons will be more 
+likely to vote in favor of enfranchising felon as opposed to those with lower 
+ideas of felons. Additionally, we explore how  a respondent’s general attitudes towards 
+felons moderate this relationship. If people generally hold negative perceptions
+of felons, we inquire about the impact of providing information about felons and 
+their recidivism rates on the chances of enfranchisement.
 -->
 
 
@@ -61,11 +67,11 @@ chances of enfranchisement.
 library(tidyr)
 library(haven)
 library(tidyverse)
-library(explore)
+library(explore) # may need to install package 
 library(haven)
 library(stringr)
-library(ggpubr)
-library(ltm)
+library(ggpubr) # may need to install package 
+library(ltm) # may need to install package 
 
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
@@ -229,7 +235,7 @@ write.csv(survey_data, "survey_data_v2.csv", row.names=TRUE)
 # More Data Cleaning and Recoding
 
 ```{r}
-survey.data <- read_csv("https://raw.githubusercontent.com/kholl28/dacss602final/main/survey_data_v2.csv?token=GHSAT0AAAAAACLHNEN2NCZ7WEDFG2CIKPZSZL2FBMQ")
+survey.data <- read_csv("https://github.com/kholl28/dacss602final/raw/refs/heads/main/survey_data_v2.csv")
 
 # renaming columns to make referencing them easier
 # --------------------------------
